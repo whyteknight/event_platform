@@ -1,3 +1,4 @@
+
 import stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createOrder } from "@/lib/actions/order.actions";
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
   const sig = request.headers.get('stripe-signature') as string
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
-  let event
+  let event: stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(body, sig, endpointSecret)
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
 
   // CREATE
   if (eventType === 'checkout.session.completed') {
+    
     const { id, amount_total, metadata } = event.data.object
 
     const order = {
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
       createdAt: new Date(),
     }
 
-    const newOrder = await createOrder(order)
+    const newOrder = await createOrder(order);
 
     return NextResponse.json({ message: 'OK', order: newOrder })
   }
